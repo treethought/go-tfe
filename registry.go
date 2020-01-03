@@ -2,7 +2,7 @@ package tfe
 
 import (
 	"context"
-	"log"
+	"fmt"
 )
 
 // Compile-time proof of interface implementation.
@@ -15,6 +15,9 @@ var _ Registry = (*registry)(nil)
 type Registry interface {
 	// Publish a module to the TFE private registry
 	Publish(ctx context.Context, options ModulePublishOptions) (*Module, error)
+
+	// Delete a module on the TFE private registry
+	DeleteModule(ctx context.Context, organizationName, moduleName string) error
 }
 
 // registry implements Registry.
@@ -60,9 +63,6 @@ type Module struct {
 // Publish is used to publish a new module to the TFE private registry
 func (r *registry) Publish(ctx context.Context, options ModulePublishOptions) (*Module, error) {
 	req, err := r.client.newRequest("POST", "registry-modules", &options)
-	if req == nil {
-		log.Fatal(req)
-	}
 	if err != nil {
 		return nil, err
 	}
@@ -74,4 +74,20 @@ func (r *registry) Publish(ctx context.Context, options ModulePublishOptions) (*
 	}
 
 	return m, nil
+}
+
+// DeleteModule is used to delete the entire module on the TFE private registry
+func (r *registry) DeleteModule(ctx context.Context, organizationName, moduleName string) error {
+	path := fmt.Sprintf("registry-modules/actions/delete/%s/%s", organizationName, moduleName)
+	req, err := r.client.newRequest("POST", path, nil)
+	if err != nil {
+		return err
+	}
+
+	err = r.client.do(ctx, req, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
