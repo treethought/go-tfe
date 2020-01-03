@@ -18,6 +18,12 @@ type Registry interface {
 
 	// Delete a module on the TFE private registry
 	DeleteModule(ctx context.Context, organizationName, moduleName string) error
+
+	// Delete a specific module version on the TFE private registry
+	DeleteModuleVersion(ctx context.Context, organizationName, moduleName, provider, version string) error
+
+	// Delete a specific module provider on the TFE private registry
+	DeleteModuleProvider(ctx context.Context, organizationName, moduleName, provider string) error {
 }
 
 // registry implements Registry.
@@ -79,6 +85,38 @@ func (r *registry) Publish(ctx context.Context, options ModulePublishOptions) (*
 // DeleteModule is used to delete the entire module on the TFE private registry
 func (r *registry) DeleteModule(ctx context.Context, organizationName, moduleName string) error {
 	path := fmt.Sprintf("registry-modules/actions/delete/%s/%s", organizationName, moduleName)
+	req, err := r.client.newRequest("POST", path, nil)
+	if err != nil {
+		return err
+	}
+
+	err = r.client.do(ctx, req, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteModuleVersion is used to delete the specific module version on the TFE private registry
+func (r *registry) DeleteModuleVersion(ctx context.Context, organizationName, moduleName, provider, version string) error {
+	path := fmt.Sprintf("registry-modules/actions/delete/%s/%s/%s/%s", organizationName, moduleName, provider, version)
+	req, err := r.client.newRequest("POST", path, nil)
+	if err != nil {
+		return err
+	}
+
+	err = r.client.do(ctx, req, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteModuleProvider is used to delete the specific module provider on the TFE private registry
+func (r *registry) DeleteModuleProvider(ctx context.Context, organizationName, moduleName, provider string) error {
+	path := fmt.Sprintf("registry-modules/actions/delete/%s/%s/%s", organizationName, moduleName, provider)
 	req, err := r.client.newRequest("POST", path, nil)
 	if err != nil {
 		return err
