@@ -155,6 +155,50 @@ func TestRunsApply(t *testing.T) {
 		err := client.Runs.Apply(ctx, badIdentifier, RunApplyOptions{})
 		assert.EqualError(t, err, "invalid value for run ID")
 	})
+
+func TestRunsApplyDestroy(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+
+	orgTest, orgTestCleanup := createOrganization(t, client)
+	defer orgTestCleanup()
+
+	// create destroyable workspace
+	options := WorkspaceCreateOptions{
+		Name:             String("foo"),
+		AllowDestroyPlan: Bool(true),
+	}
+
+	w, err := client.Workspaces.Create(ctx, orgTest.Name, options)
+	require.NoError(t, err)
+
+	// apply an intitial run
+	iopts := &RunCreateOptions{
+		Message:   String("initial run"),
+		IsDestroy: Bool(false),
+		Workspace: w,
+	}
+	rTest, rTestCleanup := createConfiguredPlannedRun(t, client, w, iopts)
+	defer rTestCleanup()
+
+	err = client.Runs.Apply(ctx, rTest.ID, RunApplyOptions{})
+	assert.NoError(t, err)
+
+	// create destroy run
+	opts := &RunCreateOptions{
+		Message:   String("destroy run"),
+		IsDestroy: Bool(true),
+		Workspace: w,
+	}
+	rdTest, rdTestCleanup := createConfiguredPlannedRun(t, client, w, opts)
+	defer rdTestCleanup()
+
+	t.Run("with IsDestroy", func(t *testing.T) {
+		err := client.Runs.Apply(ctx, rdTest.ID, RunApplyOptions{})
+		assert.NoError(t, err)
+
+	})
+
 }
 
 func TestRunsCancel(t *testing.T) {

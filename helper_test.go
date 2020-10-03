@@ -417,6 +417,41 @@ func createRunTrigger(t *testing.T, client *Client, w *Workspace, sourceable *Wo
 	}
 }
 
+func createConfiguredRun(t *testing.T, client *Client, w *Workspace, opts *RunCreateOptions) (*Run, func()) {
+	var wCleanup func()
+
+	if w == nil && opts.Workspace == nil {
+		w, wCleanup = createWorkspace(t, client, nil)
+		opts.Workspace = w
+
+	}
+	if opts.Workspace == nil {
+		opts.Workspace = w
+	}
+
+	var cvCleanup func()
+	if opts.ConfigurationVersion == nil {
+		cv, f := createUploadedConfigurationVersion(t, client, w)
+		cvCleanup = f
+		opts.ConfigurationVersion = cv
+	}
+
+	ctx := context.Background()
+
+	r, err := client.Runs.Create(ctx, *opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return r, func() {
+		if wCleanup != nil {
+			wCleanup()
+		} else {
+			cvCleanup()
+		}
+	}
+}
+
 func createRun(t *testing.T, client *Client, w *Workspace) (*Run, func()) {
 	var wCleanup func()
 
@@ -442,6 +477,32 @@ func createRun(t *testing.T, client *Client, w *Workspace) (*Run, func()) {
 			cvCleanup()
 		}
 	}
+}
+
+func createConfiguredPlannedRun(t *testing.T, client *Client, w *Workspace, opts *RunCreateOptions) (*Run, func()) {
+	r, rCleanup := createConfiguredRun(t, client, w, opts)
+
+	var err error
+	ctx := context.Background()
+	for i := 0; ; i++ {
+		r, err = client.Runs.Read(ctx, r.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		switch r.Status {
+		case RunPlanned, RunPolicyChecked, RunPolicyOverride:
+			return r, rCleanup
+		}
+
+		if i > 45 {
+			rCleanup()
+			t.Fatal("Timeout waiting for run to be planned")
+		}
+
+		time.Sleep(1 * time.Second)
+	}
+
 }
 
 func createPlannedRun(t *testing.T, client *Client, w *Workspace) (*Run, func()) {
