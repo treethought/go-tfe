@@ -87,6 +87,7 @@ func TestWorkspacesCreate(t *testing.T) {
 	t.Run("with valid options", func(t *testing.T) {
 		options := WorkspaceCreateOptions{
 			Name:                String("foo"),
+			AllowDestroyPlan:    Bool(true),
 			AutoApply:           Bool(true),
 			FileTriggersEnabled: Bool(true),
 			Operations:          Bool(true),
@@ -110,6 +111,7 @@ func TestWorkspacesCreate(t *testing.T) {
 		} {
 			assert.NotEmpty(t, item.ID)
 			assert.Equal(t, *options.Name, item.Name)
+			assert.Equal(t, *options.AllowDestroyPlan, item.AllowDestroyPlan)
 			assert.Equal(t, *options.AutoApply, item.AutoApply)
 			assert.Equal(t, *options.FileTriggersEnabled, item.FileTriggersEnabled)
 			assert.Equal(t, *options.Operations, item.Operations)
@@ -278,6 +280,7 @@ func TestWorkspacesUpdate(t *testing.T) {
 	t.Run("with valid options", func(t *testing.T) {
 		options := WorkspaceUpdateOptions{
 			Name:                String(randomString(t)),
+			AllowDestroyPlan:    Bool(false),
 			AutoApply:           Bool(false),
 			FileTriggersEnabled: Bool(true),
 			Operations:          Bool(false),

@@ -77,6 +77,7 @@ type WorkspaceList struct {
 type Workspace struct {
 	ID                   string                `jsonapi:"primary,workspaces"`
 	Actions              *WorkspaceActions     `jsonapi:"attr,actions"`
+	AllowDestroyPlan     bool                  `jsonapi:"attr,allow-destroy-plan,omitempty"`
 	AutoApply            bool                  `jsonapi:"attr,auto-apply"`
 	CanQueueDestroyPlan  bool                  `jsonapi:"attr,can-queue-destroy-plan"`
 	CreatedAt            time.Time             `jsonapi:"attr,created-at,iso8601"`
@@ -161,6 +162,9 @@ func (s *workspaces) List(ctx context.Context, organization string, options Work
 type WorkspaceCreateOptions struct {
 	// For internal use only!
 	ID string `jsonapi:"primary,workspaces"`
+
+	// Whether destroy plans can be queued on the workspace
+	AllowDestroyPlan *bool `jsonapi:"attr,allow-destroy-plan,omitempty"`
 
 	// Whether to automatically apply changes when a Terraform plan is successful.
 	AutoApply *bool `jsonapi:"attr,auto-apply,omitempty"`
@@ -312,6 +316,9 @@ func (s *workspaces) ReadByID(ctx context.Context, workspaceID string) (*Workspa
 type WorkspaceUpdateOptions struct {
 	// For internal use only!
 	ID string `jsonapi:"primary,workspaces"`
+
+	// Whether destroy plans can be queued on the workspace
+	AllowDestroyPlan *bool `jsonapi:"attr,allow-destroy-plan,omitempty"`
 
 	// Whether to automatically apply changes when a Terraform plan is successful.
 	AutoApply *bool `jsonapi:"attr,auto-apply,omitempty"`
